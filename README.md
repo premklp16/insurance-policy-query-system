@@ -4,6 +4,8 @@ A complete full-stack semantic search application designed to parse, clean, and 
 
 This project demonstrates a robust, modern document search and retrieval pipeline *without* relying on complex cloud-based vector databases, LangChain, or external LLM API endpoints.
 
+## 🖥️ Application Interface
+
 ![Application Interface](./screenshot.png)
 
 ### 💡 How It Works
@@ -24,7 +26,7 @@ This project demonstrates a robust, modern document search and retrieval pipelin
   * *Final Score Formula*: $0.6 \times \text{Semantic Sim} + 0.2 \times \text{Heading Sim} + 0.2 \times \text{Keyword Overlap}$
 * **Robust Text Cleaning**: Dynamically scans lines and filters out repeated page headers, footers, company names (e.g., "National Insurance Co."), policy names ("Arogya Sanjeevani"), page numbering, and UIN/IRDAI codes.
 * **Split-Word Repair**: Corrects character separation artifacts introduced during PDF parsing (e.g., `Hospi talization` $\rightarrow$ `Hospitalization`, `t reatment` $\rightarrow$ `treatment`) while dynamically preserving original case formatting.
-* **Sentence-Level Context Extraction**: Splits the best matching chunk into individual sentences, identifies the highest-scoring match to return as `highlighted_sentence`, and surrounds it with immediately adjacent sentences for context.
+* **Sentence-Level Retrieval & Context Highlighting**: Splits the best matching chunk into individual sentences, identifies the highest-scoring match to return as `highlighted_sentence`, and surrounds it with immediately adjacent sentences for context.
 * **Responsive UX Layout**: Includes drag-and-drop document upload with client-side checks, server-to-client progress indicator, connection status warning banner, clickable search queries suggestions, low similarity warning badges, and safe React mark highlights.
 
 ---
@@ -37,13 +39,13 @@ This project demonstrates a robust, modern document search and retrieval pipelin
 * **Sentence Transformers**: `all-MiniLM-L6-v2` dense embedding generation (eagerly loaded at server startup)
 * **Scikit-learn**: Pairwise Cosine Similarity computation
 * **PyPDF2**: Document stream extractor
-* **NumPy**: Numeric vectors operations
+* **NumPy**: Numerical vector operations
 * **tf-keras**: Included strictly for compatibility with Hugging Face Transformers when Keras 3 is active (not directly used by the application code).
 
 ### Frontend
 * **React 19 (Vite)**: Component runtime
 * **Tailwind CSS v4**: Modern, responsive styling
-* **Axios**: Promised-based HTTP client
+* **Axios**: Promise-based HTTP client
 
 ---
 
@@ -82,7 +84,7 @@ The system retrieves target text chunks using the following deterministic proces
 [ Keyword-Overlap Rerank ] (Adding 0.2 * keyword match score)
       │
       ▼
-[ Sentence-Level Highlighting ] (Sentence encoding & context retrieval)
+[ Sentence-Level Retrieval & Context Highlighting ] (Sentence encoding & context retrieval)
       │
       ▼
 [ Frontend Result ] (Render text inside JSX <mark> nodes)
@@ -122,7 +124,9 @@ The system retrieves target text chunks using the following deterministic proces
 │   │   └── services/
 │   │       └── api.js              # Axios API wrappers
 │   └── .gitignore                  # Node ignore definitions
-└── .gitignore                      # Project root gitignore definitions
+├── .gitignore                      # Project root gitignore definitions
+├── README.md                       # Project documentation
+└── screenshot.png                  # Application interface screenshot
 ```
 
 ---
@@ -136,7 +140,8 @@ The system retrieves target text chunks using the following deterministic proces
 ### 1. Setup Backend Server
 1. Clone the repository and navigate to the project directory:
    ```bash
-   cd Insurance-checker
+   git clone https://github.com/yourusername/insurance-policy-query-system.git
+   cd insurance-policy-query-system
    ```
 2. Create and activate a python virtual environment:
    ```bash
@@ -190,8 +195,10 @@ npm run dev
 ## 📡 API Endpoints
 
 ### `GET /health`
+
 Verifies server health and checks whether the Sentence Transformer model is loaded in memory.
-* **Response**:
+
+* **Example Response**:
   ```json
   {
     "status": "ok",
@@ -201,9 +208,12 @@ Verifies server health and checks whether the Sentence Transformer model is load
   ```
 
 ### `POST /upload`
+
 Uploads and parses a PDF document. Generates page mappings and caches vectors.
+
 * **Request Header**: `multipart/form-data`
-* **Response**:
+
+* **Example Response**:
   ```json
   {
     "message": "Policy document processed successfully and ready for searching."
@@ -211,14 +221,17 @@ Uploads and parses a PDF document. Generates page mappings and caches vectors.
   ```
 
 ### `POST /query`
+
 Performs multi-stage retrieval against document vectors and returns matching clause coordinates.
+
 * **Body Schema**:
   ```json
   {
     "question": "Pre-existing disease waiting period"
   }
   ```
-* **Response**:
+
+* **Example Response**:
   ```json
   {
     "status": "success",
@@ -226,13 +239,16 @@ Performs multi-stage retrieval against document vectors and returns matching cla
     "highlighted_sentence": "Pre-existing disease waiting period of 36 months applies from the inception of the policy.",
     "page": 20,
     "similarity": 71.36,
-    "message": null
+    "message": null,
+    "heading": "3.2 Waiting Period"
   }
   ```
 
 ### `DELETE /reset`
-Wipes the active caches and clears temporary session configurations.
-* **Response**:
+
+Clears the currently uploaded policy and its in-memory embeddings, wipes the active caches, and clears temporary session configurations.
+
+* **Example Response**:
   ```json
   {
     "message": "System has been reset."
@@ -242,27 +258,31 @@ Wipes the active caches and clears temporary session configurations.
 ---
 
 ## 📝 Example Queries to Try
+
 Once your insurance policy PDF is uploaded, use the suggestion tags or type in:
-1. **Pre-existing disease waiting period** (returns section 3.2 or equivalent waiting terms)
-2. **Room rent limit** (returns room rent limits or sub-limits clauses)
-3. **Ambulance charges** (returns emergency road transportation expenses)
-4. **Domiciliary hospitalization** (returns home care treatment terms)
+1. **Pre-existing disease waiting period** (returns the applicable waiting period terms or equivalent waiting duration clauses for pre-existing conditions)
+2. **Room rent limit** (returns the room rent limits or sub-limits clauses)
+3. **Ambulance charges** (returns the emergency road transportation expenses or ambulance cost definitions)
+4. **Domiciliary hospitalization** (returns the home care treatment terms or domiciliary care parameters)
 
 ---
 
 ## ⚠️ Current Limitations
-* **No OCR (Optical Character Recognition)**: The PDF parsing layer handles text extraction from searchable documents. Scanned or image-only PDFs are not supported.
-* **In-Memory Cache Lifecycle**: Policy embeddings are cached in memory (RAM). Server restarts clear active document vectors, requiring re-uploading (ideal for single-session data inspection).
-* **Document Size Scaling**: The application is designed to search a single uploaded insurance policy at a time; therefore, an in-memory embedding store with cosine similarity provides sufficient performance. FAISS is listed as a future enhancement for supporting larger document collections.
+
+* **Searchable PDF Requirement**: The system only extracts text from searchable PDF documents. Scanned or image-only PDFs are not supported.
+* **In-Memory Volatility**: Document embeddings and text chunks are stored strictly in-memory (RAM). Restarting the backend server clears the active cache, requiring the document to be re-uploaded.
+* **Single-Document Scope**: The application indexes and queries one insurance policy at a time. It does not support persistent multi-document indexing or cross-document search queries in its current state.
 
 ---
 
 ## 🔮 Future Improvements
-* **FAISS Vector Indexing**: Integrate FAISS for lightning-fast query lookups on documents with thousands of sections.
+
+* **FAISS Vector Indexing**: Integrate FAISS (Facebook AI Similarity Search) to support indexing and querying massive document collections with thousands of sections efficiently.
 * **OCR Layer**: Add Tesseract support to parse scanned images or image-only PDF uploads.
-* **Multi-Document uploads**: Query across multiple active policies simultaneously.
+* **Multi-Document Uploads**: Query across multiple active policies simultaneously.
 
 ---
 
 ## 📄 License
+
 Distributed under the MIT License. See `LICENSE` for more information.
