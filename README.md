@@ -140,7 +140,7 @@ The system retrieves target text chunks using the following deterministic proces
 ### 1. Setup Backend Server
 1. Clone the repository and navigate to the project directory:
    ```bash
-   git clone https://github.com/yourusername/insurance-policy-query-system.git
+   git clone https://github.com/premklp16/insurance-policy-query-system.git
    cd insurance-policy-query-system
    ```
 2. Create and activate a python virtual environment:
@@ -283,6 +283,3 @@ Once your insurance policy PDF is uploaded, use the suggestion tags or type in:
 
 ---
 
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
