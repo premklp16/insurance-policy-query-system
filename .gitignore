@@ -1,0 +1,38 @@
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache & Compiled Files
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# User uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Node.js dependencies & builds
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# System / IDE config
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*.log
+*.local
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
